@@ -1,6 +1,6 @@
 package com.blackbox.uitest;
 
-import android.os.RemoteException;
+
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
@@ -25,20 +25,13 @@ import static org.junit.Assert.*;
 public class BlackboxUiInstrumentedTest {
     private UiDevice phonedevice;
 
+
+    /**
+     * Launches app before each test.
+     */
     @Before
-    public void launchapp() throws UiObjectNotFoundException, RemoteException {
+    public void launchapp() throws UiObjectNotFoundException {
         phonedevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-        phonedevice.pressHome();
-        phonedevice.pressRecentApps();
-        UiScrollable recentapps = new UiScrollable(new UiSelector().scrollable(true));
-        UiObject recentframe = phonedevice.findObject(new UiSelector().text("TechChallenge"));
-        if (recentapps.waitForExists(2000)) {
-            if (recentapps.scrollIntoView(recentframe)) {
-                recentframe.swipeLeft(5);
-            }
-        } else if (recentframe.exists()) {
-            recentframe.swipeLeft(5);
-        }
         phonedevice.pressHome();
         UiObject allAppsButton = phonedevice
                 .findObject(new UiSelector().descriptionContains("Apps"));
@@ -48,6 +41,10 @@ public class BlackboxUiInstrumentedTest {
         phonedevice.findObject(new UiSelector().text("TechChallenge")).clickAndWaitForNewWindow();
     }
 
+
+    /**
+     * Exits app after each test.
+     */
     @After
     public void exitapp() {
         UiObject currentapp = phonedevice.findObject(
@@ -57,16 +54,24 @@ public class BlackboxUiInstrumentedTest {
         }
     }
 
+
+    /**
+     * Test:
+     * [Image-1A] Landing page of the app shows Delivery List
+     */
     @Test
     public void func1_image1A_landingpagelayout() {
-        /*[Image-1A] Landing page of the app shows Delivery List*/
+
         UiObject titlebar = phonedevice.findObject(new UiSelector().text("Delivery List"));
         UiScrollable deliverylist = new UiScrollable(new UiSelector().scrollable(true));
         assertTrue("Delivery List textview not found!", titlebar.waitForExists(2000));
         assertTrue("Delivery List not getting Loaded", deliverylist.waitForExists(10000));
     }
 
-    //    @Test @Ignore
+    /**
+     * Gets Count of delivery list.
+     * @return cont of items loaded in delivery list
+     */
     public int getdeliverylistcount() {
         UiScrollable deliverylist = new UiScrollable(new UiSelector().scrollable(true));
         UiObject progressbar = phonedevice.findObject(
@@ -84,28 +89,42 @@ public class BlackboxUiInstrumentedTest {
 
     }
 
+    /**
+     * Test:
+     * [Image-1A] Landing page of the app shows Delivery List with maximum 20 records when first opened.
+     */
     @Test
     public void func1_image1A_initialdeliverylistcount() {
-        /*[Image-1A]
-        Landing page of the app shows Delivery List with maximum 20 records when first opened.*/
+
         int cnt = getdeliverylistcount();
-        assertEquals("Delivery list does not have 20 records.", 20, cnt);
+        assertTrue("Delivery list has more than 20 records.", 20>=cnt);
+
     }
 
+
+    /**Test:
+     * [Image-1A]
+            Scrolling up will retrieve more items,
+             each time 20 records are appended at the end of the list.*/
     @Test
     public void func2_image1_deliverylistappending() {
-        /*[Image-1A]
-        Scrolling up will retrieve more items,
-         each time 20 records are appended at the end of the list.*/
-        int cnt = getdeliverylistcount();
-        cnt = cnt + getdeliverylistcount();
-        assertEquals("Number of items appended in delivery list is not 20", 20, cnt);
+
+       getdeliverylistcount();
+        UiObject progressbar = phonedevice.findObject(
+                new UiSelector().className("android.widget.ProgressBar"));
+        progressbar.waitUntilGone(10);
+
+        assertEquals("Number of items appended in delivery list is not 20", 20, getdeliverylistcount());
     }
+
+    /**Test:
+     * [Image-1A]
+     * Shows icon, description and location. Parcels are for Leviero and documents are for Andrio.
+        */
 
     @Test
     public void func3_checkdeliverylistitemslayout() throws UiObjectNotFoundException {
-        /*[Image-1A]
-        Shows icon, description and location. Parcels are for Leviero and documents are for Andrio.*/
+
         UiScrollable deliverylist = new UiScrollable(new UiSelector().scrollable(true));
         deliverylist.waitForExists(10000);
         int deliverylistcount = deliverylist.getChildCount();
@@ -138,10 +157,14 @@ public class BlackboxUiInstrumentedTest {
         }
     }
 
+
+    /**
+     * Test:
+     * [Image-1A]Long press on an item, and it will be deleted.
+     */
     @Test
     public void func4_longpressdelete() throws UiObjectNotFoundException {
-        /*[Image-1A]
-         Long press on an item, and it will be deleted.*/
+
         UiScrollable deliverylist = new UiScrollable(new UiSelector().scrollable(true));
         deliverylist.waitForExists(10000);
         int deliverylistcount = deliverylist.getChildCount();
@@ -166,20 +189,28 @@ public class BlackboxUiInstrumentedTest {
 
     }
 
+    /**
+     * Test:
+     * [Image-2A]        Click any item from Delivery List and Delivery Details page shows.
+     * @throws UiObjectNotFoundException on not finding Uiobjects
+     */
     @Test
     public void func5_clickindeliveriitem() throws UiObjectNotFoundException {
-        /*[Image-2A]
-        Click any item from Delivery List and Delivery Details page shows.*/
+
         opendeliverydetails();
         UiObject deliverydetails = phonedevice.findObject(new UiSelector().text("Delivery Detail"));
         assertTrue("Delivery detail page did not open!", deliverydetails.waitForExists(10000));
 
     }
 
+    /**
+     * Test:
+     * [Image-2A] Information should be shown correctly based on the item details from [Image-1A]
+     * @throws UiObjectNotFoundException on not finding Uiobjects
+     */
     @Test
     public void func5_ddpagedetails() throws UiObjectNotFoundException {
-        /*[Image-2A]
-        Information should be shown correctly based on the item details from [Image-1A] */
+
         String str[] = opendeliverydetails();
         UiObject deliverydetails = phonedevice.findObject(new UiSelector().text("Delivery Detail"));
         assertTrue("Delivery detail page did not open!", deliverydetails.waitForExists(10000));
@@ -195,6 +226,13 @@ public class BlackboxUiInstrumentedTest {
         assertEquals("Address on delivery list does not match address on detail page!", str[1], dd_add.getText());
     }
 
+    /**
+     * Opens Delivery detail page for a randomly selected delivery list item
+     * @return an array with 2 values
+     *          str[0] is delivery description of the item clicked
+     *          str[1] is the address of the item clicked
+     * @throws UiObjectNotFoundException on not finding delivery list
+     */
     public String[] opendeliverydetails() throws UiObjectNotFoundException {
         UiScrollable deliverylist = new UiScrollable(new UiSelector().scrollable(true));
         deliverylist.waitForExists(10000);
@@ -216,10 +254,14 @@ public class BlackboxUiInstrumentedTest {
         return str;
     }
 
+
+    /**
+     * Test:
+     * [Image-2A]
+     Map pin shows and centred to that pin for that delivery.*/
     @Test
     public void func6_checkmappin() throws UiObjectNotFoundException {
-        /*[Image-2A]
-        Map pin shows and centred to that pin for that delivery.*/
+
         opendeliverydetails();
         UiObject mapview = phonedevice.findObject(new UiSelector().description("Google Map"));
         UiObject mappin = mapview.getChild(new UiSelector().className("android.view.View"));
@@ -232,9 +274,12 @@ public class BlackboxUiInstrumentedTest {
 
     }
 
+
+    /**
+     * [Image-2B] Shows when clicking the 14th record from Delivery List.*/
     @Test
     public void func8_check14deliverydetail() {
-        /*[Image-2B] Shows when clicking the 14th record from Delivery List.*/
+
         UiScrollable deliverylist = new UiScrollable(new UiSelector().scrollable(true));
         assertTrue("Delivery List not getting Loaded", deliverylist.waitForExists(10000));
         for (int i = 0; i < 14; i++) {
