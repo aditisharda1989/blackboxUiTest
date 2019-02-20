@@ -29,6 +29,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 
+
 /**
  * Instrumented test, which will execute on an Android device.
  *
@@ -42,53 +43,26 @@ public class BlackboxUiInstrumentedTest {
     private static final int LAUNCH_TIMEOUT = 5000;
 
     private UiDevice phonedevice=UiDevice.getInstance(getInstrumentation());
-
+    private appActions app= new appActions();
 
     /**
      * Launches app before each test.
      */
     @Before
-    public void launchapp() {
+    public void setup() {
 
-        phonedevice.pressHome();
-        final String launcherPackage = getLauncherPackageName();
-        assertThat(launcherPackage, notNullValue());
-        phonedevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
-        Context context = getApplicationContext();
-        final Intent intent = context.getPackageManager()
-                .getLaunchIntentForPackage(PACKAGE_UNDER_TEST);
-        assert intent != null;
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        context.startActivity(intent);
-        phonedevice.wait(Until.hasObject(By.pkg(PACKAGE_UNDER_TEST).depth(0)), LAUNCH_TIMEOUT);
+        app.launchapp();
     }
-    /**
-     * Uses package manager to find the package name of the device launcher. Usually this package
-     * is "com.android.launcher" but can be different at times. This is a generic solution which
-     * works on all platforms.`
-     */
-    private String getLauncherPackageName() {
-        // Create launcher Intent
-        final Intent intent = new Intent(Intent.ACTION_MAIN);
-        intent.addCategory(Intent.CATEGORY_HOME);
 
-        // Use PackageManager to get the launcher package name
-        PackageManager pm = getApplicationContext().getPackageManager();
-        ResolveInfo resolveInfo = pm.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY);
-        return resolveInfo.activityInfo.packageName;
-    }
 
 
     /**
      * Exits app after each test.
      */
     @After
-    public void exitapp() {
-        UiObject currentapp = phonedevice.findObject(
-                new UiSelector().packageName("com.lalamove.techchallenge"));
-        while (currentapp.exists()) {
-            phonedevice.pressBack();
-        }
+    public void teardown(){
+        app.exitapp();
+
     }
 
 
@@ -99,32 +73,11 @@ public class BlackboxUiInstrumentedTest {
     @Test
     public void func1_image1A_landingpagelayout() {
 
-        UiObject titlebar = phonedevice.findObject(new UiSelector().text("Delivery List"));
-        UiScrollable deliverylist = new UiScrollable(new UiSelector().scrollable(true));
-        assertTrue("Delivery List textview not found!", titlebar.waitForExists(2000));
-        assertTrue("Delivery List not getting Loaded", deliverylist.waitForExists(10000));
+        assertTrue("Delivery List textview not found!", app.titlebar.waitForExists(2000));
+        assertTrue("Delivery List not getting Loaded", app.deliverylist.waitForExists(10000));
     }
 
-    /**
-     * Gets Count of delivery list.
-     * @return cont of items loaded in delivery list
-     */
-    public int getdeliverylistcount() {
-        UiScrollable deliverylist = new UiScrollable(new UiSelector().scrollable(true));
-        UiObject progressbar = phonedevice.findObject(
-                new UiSelector().className("android.widget.ProgressBar"));
-        assertTrue("Delivery List not getting Loaded", deliverylist.waitForExists(10000));
-        int dlistcount = 0;
-        do {
-            phonedevice.pressDPadDown();
 
-            dlistcount++;
-
-        } while (!(progressbar.exists()));
-
-        return dlistcount - 1;
-
-    }
 
     /**
      * Test:
@@ -133,7 +86,7 @@ public class BlackboxUiInstrumentedTest {
     @Test
     public void func1_image1A_initialdeliverylistcount() {
 
-        int cnt = getdeliverylistcount();
+        int cnt = app.getdeliverylistcount();
         assertTrue("Delivery list has more than 20 records.", 20>=cnt);
 
     }
@@ -146,12 +99,12 @@ public class BlackboxUiInstrumentedTest {
     @Test
     public void func2_image1_deliverylistappending() {
 
-       getdeliverylistcount();
+       app.getdeliverylistcount();
         UiObject progressbar = phonedevice.findObject(
                 new UiSelector().className("android.widget.ProgressBar"));
         progressbar.waitUntilGone(10);
 
-        assertEquals("Number of items appended in delivery list is not 20", 20, getdeliverylistcount());
+        assertEquals("Number of items appended in delivery list is not 20", 20, app.getdeliverylistcount());
     }
 
     /**Test:
@@ -202,27 +155,18 @@ public class BlackboxUiInstrumentedTest {
     @Test
     public void func4_longpressdelete() throws UiObjectNotFoundException {
 
-        UiScrollable deliverylist = new UiScrollable(new UiSelector().scrollable(true));
-        deliverylist.waitForExists(10000);
-        int deliverylistcount = deliverylist.getChildCount();
+        app.wait_for_deliveryList();
+        int deliverylistcount = app.deliverylist.getChildCount();
         Random rand = new Random();
         int x = rand.nextInt(deliverylistcount - 1);
-        UiObject deliveryitem = deliverylist.getChild(
+        String dinfo[]=app.get_deliveryitem_info(x);
+        UiObject deliveryitem = app.deliverylist.getChild(
                 new UiSelector().className("android.view.ViewGroup").index(x));
-        String dinfo = deliveryitem.getChild(
-                new UiSelector().resourceId(
-                        "com.lalamove.techchallenge:id/textView_description")).getText()
-                + deliveryitem.getChild(
-                new UiSelector().resourceId(
-                        "com.lalamove.techchallenge:id/textView_address")).getText();
-        deliveryitem.dragTo(deliveryitem, 100);
-        String dinfo2 = deliveryitem.getChild(
-                new UiSelector().resourceId(
-                        "com.lalamove.techchallenge:id/textView_description")).getText()
-                + deliveryitem.getChild(
-                new UiSelector().resourceId(
-                        "com.lalamove.techchallenge:id/textView_address")).getText();
-        assertNotEquals("Delivery Item Not deleted!", dinfo, dinfo2);
+        deliveryitem.dragTo(deliveryitem,100);
+        String dinfo2[]=app.get_deliveryitem_info(x);
+        assertNotEquals("Delivery Item Not deleted!",dinfo,dinfo2);
+
+
 
     }
 
