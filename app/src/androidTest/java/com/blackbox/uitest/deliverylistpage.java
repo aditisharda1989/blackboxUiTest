@@ -14,4 +14,6 @@ class deliverylistpage {
     UiScrollable deliverylist = new UiScrollable(new UiSelector().scrollable(true));
     private UiDevice phonedevice = UiDevice.getInstance(getInstrumentation());
     UiObject titlebar = phonedevice.findObject(new UiSelector().text("Delivery List"));
+    UiObject progressbar = phonedevice.findObject(
+            new UiSelector().className("android.widget.ProgressBar"));
 }

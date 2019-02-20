@@ -10,7 +10,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
-import androidx.test.uiautomator.UiSelector;
 
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 import static java.lang.Math.round;
@@ -70,7 +69,7 @@ public class BlackboxUiInstrumentedTest {
      * [Image-1A] Landing page of the app shows Delivery List with maximum 20 records when first opened.
      */
     @Test
-    public void func1_image1A_initialdeliverylistcount() {
+    public void func1_image1A_initialdeliverylistcount() throws UiObjectNotFoundException {
 
         int cnt = app.getdeliverylistcount();
         assertTrue("Delivery list has more than 20 records.", 20 >= cnt);
@@ -85,14 +84,14 @@ public class BlackboxUiInstrumentedTest {
      * each time 20 records are appended at the end of the list.
      */
     @Test
-    public void func2_image1_deliverylistappending() {
+    public void func2_image1_deliverylistappending() throws UiObjectNotFoundException {
 
-        app.getdeliverylistcount();
-        UiObject progressbar = phonedevice.findObject(
-                new UiSelector().className("android.widget.ProgressBar"));
-        progressbar.waitUntilGone(10);
 
-        assertEquals("Number of items appended in delivery list is not 20", 20, app.getdeliverylistcount());
+        int cnt=app.getdeliverylistcount();
+        app.listpage.progressbar.waitUntilGone(appActions.NETWORK_TIMEOUT);
+        app.listpage.deliverylist.flingBackward();
+        int cnt2=app.getdeliverylistcount();
+        assertEquals("Number of items appended in delivery list is not 20", 20, cnt2-cnt);
     }
 
     /**
@@ -227,5 +226,7 @@ public class BlackboxUiInstrumentedTest {
 
 
     }
+
+
 
 }

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Rect;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,11 +19,14 @@ import androidx.test.uiautomator.Until;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
+import static java.lang.Math.round;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 
+/**
+ * class defining app actions
+ */
 class appActions {
     deliverylistpage listpage = new deliverylistpage();
     deliverydetailspage detailspage = new deliverydetailspage();
@@ -35,27 +39,40 @@ class appActions {
     private UiDevice phonedevice = UiDevice.getInstance(getInstrumentation());
 
 
+
+
     /**
      * Gets Count of delivery list.
      *
-     * @return cont of items loaded in delivery list
+     * @return count of items loaded in delivery list
      */
-    int getdeliverylistcount() {
+    int getdeliverylistcount() throws UiObjectNotFoundException {
+        wait_for_deliveryList();
 
-        UiObject progressbar = phonedevice.findObject(
-                new UiSelector().className("android.widget.ProgressBar"));
-        assertTrue("Delivery List not getting Loaded", listpage.deliverylist.waitForExists(NETWORK_TIMEOUT));
-        int dlistcount = 0;
-        do {
-            phonedevice.pressDPadDown();
+        Rect listbounds=listpage.deliverylist.getBounds();
+        Rect titlebounds=listpage.titlebar.getBounds();
+        int cnt=0;
+        boolean lastswipestatus;
+        do{
+            UiObject lastitem=getdeliveryitem(listpage.deliverylist.getChildCount()-1);
+            cnt=cnt+listpage.deliverylist.getChildCount();
 
-            dlistcount++;
+            lastswipestatus=phonedevice.swipe(round(listbounds.centerX()),lastitem.getBounds().top,
+                    round(titlebounds.exactCenterX()),titlebounds.top,55);
 
-        } while (!(progressbar.exists()));
+        }while (!(listpage.progressbar.waitForExists(1000)));
+        if (lastswipestatus){
+            cnt=cnt+listpage.deliverylist.getChildCount();
+        }
 
-        return dlistcount - 1;
+
+
+//        returning cnt-1 as progressbar is also a child of deliverylist scrollable
+        return cnt-1;
+
 
     }
+
 
     /**
      * Launches app
