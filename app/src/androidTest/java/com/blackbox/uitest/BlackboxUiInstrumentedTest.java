@@ -1,20 +1,33 @@
 package com.blackbox.uitest;
 
 
-import android.support.test.InstrumentationRegistry;
-import android.support.test.runner.AndroidJUnit4;
-import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiObjectNotFoundException;
-import android.support.test.uiautomator.UiScrollable;
-import android.support.test.uiautomator.UiSelector;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import java.util.Random;
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
+import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.uiautomator.By;
+import androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiObjectNotFoundException;
+import androidx.test.uiautomator.UiScrollable;
+import androidx.test.uiautomator.UiSelector;
+import androidx.test.uiautomator.Until;
 import static java.lang.Math.round;
-import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -23,22 +36,46 @@ import static org.junit.Assert.*;
  */
 @RunWith(AndroidJUnit4.class)
 public class BlackboxUiInstrumentedTest {
-    private UiDevice phonedevice;
+    private static final String PACKAGE_UNDER_TEST
+            = "com.lalamove.techchallenge";
+
+    private static final int LAUNCH_TIMEOUT = 5000;
+
+    private UiDevice phonedevice=UiDevice.getInstance(getInstrumentation());
 
 
     /**
      * Launches app before each test.
      */
     @Before
-    public void launchapp() throws UiObjectNotFoundException {
-        phonedevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+    public void launchapp() {
+
         phonedevice.pressHome();
-        UiObject allAppsButton = phonedevice
-                .findObject(new UiSelector().descriptionContains("Apps"));
-        allAppsButton.clickAndWaitForNewWindow();
-        UiScrollable appViews = new UiScrollable(new UiSelector().scrollable(true));
-        appViews.scrollIntoView(new UiSelector().text("TechChallenge"));
-        phonedevice.findObject(new UiSelector().text("TechChallenge")).clickAndWaitForNewWindow();
+        final String launcherPackage = getLauncherPackageName();
+        assertThat(launcherPackage, notNullValue());
+        phonedevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
+        Context context = getApplicationContext();
+        final Intent intent = context.getPackageManager()
+                .getLaunchIntentForPackage(PACKAGE_UNDER_TEST);
+        assert intent != null;
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        context.startActivity(intent);
+        phonedevice.wait(Until.hasObject(By.pkg(PACKAGE_UNDER_TEST).depth(0)), LAUNCH_TIMEOUT);
+    }
+    /**
+     * Uses package manager to find the package name of the device launcher. Usually this package
+     * is "com.android.launcher" but can be different at times. This is a generic solution which
+     * works on all platforms.`
+     */
+    private String getLauncherPackageName() {
+        // Create launcher Intent
+        final Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_HOME);
+
+        // Use PackageManager to get the launcher package name
+        PackageManager pm = getApplicationContext().getPackageManager();
+        ResolveInfo resolveInfo = pm.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY);
+        return resolveInfo.activityInfo.packageName;
     }
 
 
