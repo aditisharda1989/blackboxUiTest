@@ -5,29 +5,23 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
+
 import java.util.Random;
-import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
+
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
+
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
-import androidx.test.uiautomator.Until;
+
 import static java.lang.Math.round;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-
 
 
 /**
@@ -37,13 +31,10 @@ import static org.junit.Assert.assertTrue;
  */
 @RunWith(AndroidJUnit4.class)
 public class BlackboxUiInstrumentedTest {
-    private static final String PACKAGE_UNDER_TEST
-            = "com.lalamove.techchallenge";
 
-    private static final int LAUNCH_TIMEOUT = 5000;
 
-    private UiDevice phonedevice=UiDevice.getInstance(getInstrumentation());
-    private appActions app= new appActions();
+    private UiDevice phonedevice = UiDevice.getInstance(getInstrumentation());
+    private appActions app = new appActions();
 
     /**
      * Launches app before each test.
@@ -55,12 +46,11 @@ public class BlackboxUiInstrumentedTest {
     }
 
 
-
     /**
      * Exits app after each test.
      */
     @After
-    public void teardown(){
+    public void teardown() {
         app.exitapp();
 
     }
@@ -78,7 +68,6 @@ public class BlackboxUiInstrumentedTest {
     }
 
 
-
     /**
      * Test:
      * [Image-1A] Landing page of the app shows Delivery List with maximum 20 records when first opened.
@@ -87,19 +76,21 @@ public class BlackboxUiInstrumentedTest {
     public void func1_image1A_initialdeliverylistcount() {
 
         int cnt = app.getdeliverylistcount();
-        assertTrue("Delivery list has more than 20 records.", 20>=cnt);
+        assertTrue("Delivery list has more than 20 records.", 20 >= cnt);
 
     }
 
 
-    /**Test:
+    /**
+     * Test:
      * [Image-1A]
-            Scrolling up will retrieve more items,
-             each time 20 records are appended at the end of the list.*/
+     * Scrolling up will retrieve more items,
+     * each time 20 records are appended at the end of the list.
+     */
     @Test
     public void func2_image1_deliverylistappending() {
 
-       app.getdeliverylistcount();
+        app.getdeliverylistcount();
         UiObject progressbar = phonedevice.findObject(
                 new UiSelector().className("android.widget.ProgressBar"));
         progressbar.waitUntilGone(10);
@@ -107,10 +98,11 @@ public class BlackboxUiInstrumentedTest {
         assertEquals("Number of items appended in delivery list is not 20", 20, app.getdeliverylistcount());
     }
 
-    /**Test:
+    /**
+     * Test:
      * [Image-1A]
      * Shows icon, description and location. Parcels are for Leviero and documents are for Andrio.
-        */
+     */
 
     @Test
     public void func3_checkdeliverylistitemslayout() throws UiObjectNotFoundException {
@@ -159,13 +151,12 @@ public class BlackboxUiInstrumentedTest {
         int deliverylistcount = app.deliverylist.getChildCount();
         Random rand = new Random();
         int x = rand.nextInt(deliverylistcount - 1);
-        String dinfo[]=app.get_deliveryitem_info(x);
+        String dinfo[] = app.get_deliveryitem_info(x);
         UiObject deliveryitem = app.deliverylist.getChild(
                 new UiSelector().className("android.view.ViewGroup").index(x));
-        deliveryitem.dragTo(deliveryitem,100);
-        String dinfo2[]=app.get_deliveryitem_info(x);
-        assertNotEquals("Delivery Item Not deleted!",dinfo,dinfo2);
-
+        deliveryitem.dragTo(deliveryitem, 100);
+        String dinfo2[] = app.get_deliveryitem_info(x);
+        assertNotEquals("Delivery Item Not deleted!", dinfo, dinfo2);
 
 
     }
@@ -173,6 +164,7 @@ public class BlackboxUiInstrumentedTest {
     /**
      * Test:
      * [Image-2A]        Click any item from Delivery List and Delivery Details page shows.
+     *
      * @throws UiObjectNotFoundException on not finding Uiobjects
      */
     @Test
@@ -187,6 +179,7 @@ public class BlackboxUiInstrumentedTest {
     /**
      * Test:
      * [Image-2A] Information should be shown correctly based on the item details from [Image-1A]
+     *
      * @throws UiObjectNotFoundException on not finding Uiobjects
      */
     @Test
@@ -209,9 +202,10 @@ public class BlackboxUiInstrumentedTest {
 
     /**
      * Opens Delivery detail page for a randomly selected delivery list item
+     *
      * @return an array with 2 values
-     *          str[0] is delivery description of the item clicked
-     *          str[1] is the address of the item clicked
+     * str[0] is delivery description of the item clicked
+     * str[1] is the address of the item clicked
      * @throws UiObjectNotFoundException on not finding delivery list
      */
     public String[] opendeliverydetails() throws UiObjectNotFoundException {
@@ -239,7 +233,8 @@ public class BlackboxUiInstrumentedTest {
     /**
      * Test:
      * [Image-2A]
-     Map pin shows and centred to that pin for that delivery.*/
+     * Map pin shows and centred to that pin for that delivery.
+     */
     @Test
     public void func6_checkmappin() throws UiObjectNotFoundException {
 
@@ -257,7 +252,8 @@ public class BlackboxUiInstrumentedTest {
 
 
     /**
-     * [Image-2B] Shows when clicking the 14th record from Delivery List.*/
+     * [Image-2B] Shows when clicking the 14th record from Delivery List.
+     */
     @Test
     public void func8_check14deliverydetail() {
 
