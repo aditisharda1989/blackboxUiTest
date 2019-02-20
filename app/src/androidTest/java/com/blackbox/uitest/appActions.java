@@ -5,11 +5,14 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
-import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
@@ -19,15 +22,18 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+
 class appActions {
+    deliverylistpage listpage = new deliverylistpage();
+    deliverydetailspage detailspage = new deliverydetailspage();
     private static final String PACKAGE_UNDER_TEST
             = "com.lalamove.techchallenge";
 
-    private static final int LAUNCH_TIMEOUT = 5000;
+    static final int LAUNCH_TIMEOUT = 5000;
+    static final int NETWORK_TIMEOUT = 10000;
 
     private UiDevice phonedevice = UiDevice.getInstance(getInstrumentation());
-    UiObject titlebar = phonedevice.findObject(new UiSelector().text("Delivery List"));
-    UiScrollable deliverylist = new UiScrollable(new UiSelector().scrollable(true));
+
 
     /**
      * Gets Count of delivery list.
@@ -35,10 +41,10 @@ class appActions {
      * @return cont of items loaded in delivery list
      */
     int getdeliverylistcount() {
-        UiScrollable deliverylist = new UiScrollable(new UiSelector().scrollable(true));
+
         UiObject progressbar = phonedevice.findObject(
                 new UiSelector().className("android.widget.ProgressBar"));
-        assertTrue("Delivery List not getting Loaded", deliverylist.waitForExists(10000));
+        assertTrue("Delivery List not getting Loaded", listpage.deliverylist.waitForExists(NETWORK_TIMEOUT));
         int dlistcount = 0;
         do {
             phonedevice.pressDPadDown();
@@ -50,7 +56,6 @@ class appActions {
         return dlistcount - 1;
 
     }
-
 
     /**
      * Launches app
@@ -102,15 +107,24 @@ class appActions {
     /**
      * waits till delivery list is loaded
      */
-    void wait_for_deliveryList() {
+    int wait_for_deliveryList() throws UiObjectNotFoundException {
 
-        deliverylist.waitForExists(10000);
+        listpage.deliverylist.waitForExists(NETWORK_TIMEOUT);
+        return listpage.deliverylist.getChildCount();
     }
 
-    String[] get_deliveryitem_info(int i) throws UiObjectNotFoundException {
+    /**
+     * gets delivery description and address of a particulat item in delivery list
+     *
+     * @param index : delivery list index
+     * @return dinfo[0]: delivery description
+     * dinfo[1]: address
+     * @throws UiObjectNotFoundException when UiObject is not found
+     */
+    String[] get_deliveryitem_info(int index) throws UiObjectNotFoundException {
 
-        UiObject deliveryitem = deliverylist.getChild(
-                new UiSelector().className("android.view.ViewGroup").index(i));
+        UiObject deliveryitem = listpage.deliverylist.getChild(
+                new UiSelector().className("android.view.ViewGroup").index(index));
         String dinfo[] = new String[2];
         dinfo[0] = deliveryitem.getChild(
                 new UiSelector().resourceId(
@@ -122,5 +136,90 @@ class appActions {
 
     }
 
+    /**
+     * to get all child objects of chosen index of delivery list item
+     *
+     * @param i: delivery list index
+     * @return a Map of all child objects
+     * @throws UiObjectNotFoundException when Ui elements are not found
+     */
+    Map getdeliveryitemobjects(int i) throws UiObjectNotFoundException {
+
+        UiObject deliveryitem = getdeliveryitem(i);
+
+        Map<String, UiObject> ditem = new HashMap<>();
+        ditem.put("picon", deliveryitem.getChild(
+                new UiSelector().resourceId("com.lalamove.techchallenge:id/simpleDraweeView")));
+        ditem.put("dmsg", deliveryitem.getChild(
+                new UiSelector().resourceId("com.lalamove.techchallenge:id/textView_description")));
+        ditem.put("licon", deliveryitem.getChild(
+                new UiSelector().resourceId("com.lalamove.techchallenge:id/imageView")));
+        ditem.put("address", deliveryitem.getChild(
+                new UiSelector().resourceId("com.lalamove.techchallenge:id/textView_address")));
+        return ditem;
+    }
+
+    /**
+     * UiObject of selected delivery item
+     *
+     * @param index : delivery list index
+     * @return delivery list item
+     * @throws UiObjectNotFoundException when Ui elements are not found
+     */
+    UiObject getdeliveryitem(int index) throws UiObjectNotFoundException {
+
+        return listpage.deliverylist.getChild(
+                new UiSelector().className("android.view.ViewGroup").index(index));
+    }
+
+    /**
+     * Opens Delivery detail page for a randomly selected delivery list item
+     *
+     * @return an array with 2 values
+     * str[0] is delivery description of the item clicked
+     * str[1] is the address of the item clicked
+     * @throws UiObjectNotFoundException on not finding delivery list
+     */
+    String[] opendeliverydetails(int index) throws UiObjectNotFoundException {
+
+        wait_for_deliveryList();
+        UiObject deliveryitem = getdeliveryitem(index);
+        String dinfo[] = get_deliveryitem_info(index);
+        deliveryitem.click();
+        return dinfo;
+    }
+
+    /**
+     * waits for delivery list to load
+     *
+     * @return count to delivery list items visible
+     */
+    Boolean waitfordeliverydetailspage() {
+        UiObject deliverydetails = phonedevice.findObject(new UiSelector().text("Delivery Detail"));
+        return deliverydetails.waitForExists(NETWORK_TIMEOUT);
+    }
+
+    /**
+     * get a UiObject for map pin on delivery details page
+     *
+     * @return UiObject for map pin
+     * @throws UiObjectNotFoundException when Ui elements are not found
+     */
+    UiObject getmappin() throws UiObjectNotFoundException {
+        return detailspage.mapview.getChild(new UiSelector().className("android.view.View"));
+    }
+
+    /**
+     * randomly selects an index from the delivery list
+     *
+     * @return an integer within the index visible
+     * @throws UiObjectNotFoundException when UI elements are not found
+     */
+    int getrandomlistindex() throws UiObjectNotFoundException {
+        Random rand = new Random();
+        return rand.nextInt(wait_for_deliveryList() - 1);
+    }
+
 
 }
+
